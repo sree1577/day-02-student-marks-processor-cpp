@@ -24,12 +24,12 @@ vector<Student> readCSV(const string& filename) {
     ifstream file(filename);
 
     if (!file.is_open()) {
-        cout << " Error opening file\n";
+        cout << "❌ Unable to open the file. Please verify the file name.\n";
         return students;
     }
 
     string line;
-    getline(file, line); // Skip header
+    getline(file, line);
 
     while (getline(file, line) && students.size() < 75) {
         stringstream ss(line);
@@ -42,7 +42,7 @@ vector<Student> readCSV(const string& filename) {
             double marks = stod(marksStr);
             students.push_back({name, marks});
         } catch (...) {
-            cout << "⚠ Ignored invalid marks for " << name << endl;
+            cout << "⚠ Invalid marks entry ignored for student: " << name << endl;
         }
     }
 
@@ -51,40 +51,79 @@ vector<Student> readCSV(const string& filename) {
 }
 
 void generateReport(const vector<Student>& students) {
-    cout << "\n Student Marks Report (75 Students)\n";
-    cout << "--------------------------------------------\n";
-    cout << left << setw(15) << "Name"
+    cout << "\n📊 Student Marks Report\n";
+    cout << "--------------------------------------------------\n";
+    cout << left << setw(18) << "Name"
          << setw(10) << "Marks"
          << "Grade\n";
-    cout << "--------------------------------------------\n";
+    cout << "--------------------------------------------------\n";
 
-    double total = 0;
+    double totalMarks = 0;
+    int passCount = 0, failCount = 0;
+    int gradeCount[5] = {0};
+    Student topper{"", -1};
 
-    for (const auto& s : students) {
-        char grade = calculateGrade(s.marks);
-        total += s.marks;
+    for (const auto& student : students) {
+        char grade = calculateGrade(student.marks);
+        totalMarks += student.marks;
 
-        cout << left << setw(15) << s.name
+        if (student.marks >= 40)
+            passCount++;
+        else
+            failCount++;
+
+        if (grade == 'A') gradeCount[0]++;
+        else if (grade == 'B') gradeCount[1]++;
+        else if (grade == 'C') gradeCount[2]++;
+        else if (grade == 'D') gradeCount[3]++;
+        else gradeCount[4]++;
+
+        if (student.marks > topper.marks) {
+            topper = student;
+        }
+
+        cout << left << setw(18) << student.name
              << setw(10) << fixed << setprecision(2)
-             << s.marks << grade << endl;
+             << student.marks
+             << grade << endl;
     }
 
-    cout << "--------------------------------------------\n";
-    cout << "Total Students Processed: " << students.size() << endl;
-    cout << "Class Average Marks: "
-         << fixed << setprecision(2)
-         << total / students.size() << endl;
+    cout << "--------------------------------------------------\n";
+    cout << "Total Students Processed : " << students.size() << endl;
+
+    if (!students.empty()) {
+        cout << "Class Average Marks      : "
+             << fixed << setprecision(2)
+             << totalMarks / students.size() << endl;
+    }
+
+    cout << "Students Passed          : " << passCount << endl;
+    cout << "Students Failed          : " << failCount << endl;
+
+    if (topper.marks >= 0) {
+        cout << "Class Topper             : "
+             << topper.name << " (" << fixed << setprecision(2)
+             << topper.marks << ")\n";
+    }
+
+    cout << "\nGrade Distribution\n";
+    cout << "A : " << gradeCount[0] << endl;
+    cout << "B : " << gradeCount[1] << endl;
+    cout << "C : " << gradeCount[2] << endl;
+    cout << "D : " << gradeCount[3] << endl;
+    cout << "F : " << gradeCount[4] << endl;
 }
 
 int main() {
     string filename;
-    cout << "Enter CSV file name: ";
+
+    cout << "Enter the CSV file name: ";
     cin >> filename;
 
     vector<Student> students = readCSV(filename);
 
     if (students.size() < 75) {
-        cout << " Warning: Less than 75 valid student records found\n";
+        cout << "⚠ Note: Fewer than 75 valid student records were found.\n";
     }
 
     generateReport(students);
